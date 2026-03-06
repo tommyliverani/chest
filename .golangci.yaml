@@ -1,0 +1,32 @@
+# .golangci.yml
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+
+linters:
+  disable-all: true
+  enable:
+    - gosec       # Essential: Scans for security vulnerabilities and crypto flaws
+    - staticcheck # Detects logical bugs and suspicious code
+    - govet       # Official Go standard analysis tool
+    - errcheck    # Ensures every error is handled (critical for vault operations)
+    - unused      # Finds unused variables, functions, or constants (dead code)
+    - revive      # Checks for coding style and documentation consistency
+    - gocritic    # Provides suggestions to make code more "Go-idiomatic"
+    - bodyclose   # Verifies that HTTP/socket bodies are closed correctly (agent safety)
+
+linters-settings:
+  gosec:
+    # Exclude G104: often ignored if manual file closure error handling is preferred
+    excludes:
+      - G104
+  revive:
+    rules:
+      - name: exported
+        arguments:
+          - "disableStutteringCheck" 
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
