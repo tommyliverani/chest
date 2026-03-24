@@ -1,0 +1,61 @@
+CHEST: THE COMMAND LINE SECRET MANAGER
+
+1. OVERVIEW
+Chest is a command-line password manager designed to store various types 
+of secrets and login commands. The goal is to simplify the CLI experience 
+by automating the retrieval and execution of authentication tokens and 
+cluster commands.
+
+Instead of manually finding a URL and token for an OpenShift cluster in 
+your vault and pasting it into the terminal, you can simply run:
+$ chest oc <cluster_id>
+
+Chest will retrieve the credentials and execute the command for you. 
+Built in Go, the tool leverages concurrency to parallelize tasks like 
+file I/O and encryption/decryption.
+
+2. CORE CONCEPTS
+
+CHEST
+A Chest is a container for "Jewels".
+- Each Chest type defines its own JSON structure, stored by default 
+  in ~/.chest/
+- Each Chest manages its own encryption/decryption logic.
+- Currently, the supported type is AES, which stores data in a JSON 
+  file encrypted via the AES algorithm.
+- Future integrations may include S3 buckets or HashiCorp Vault.
+
+JEWEL
+A Jewel is any data stored within a Chest (passwords, tokens, 
+kubeconfigs, SSH commands, oc login commands, curl requests, etc.).
+- Each Jewel type defines its own JSON structure and behavior.
+- Example: A 'Password' jewel copies content to the clipboard; a 
+  'Kubeconfig' jewel runs the export command to log into a cluster.
+
+FACTORY PATTERN
+To manage different types of Jewels and Chests without complex 
+if/else or switch blocks, a Factory pattern is implemented.
+- Registration: Each type registers its creation and parsing methods 
+  using the Go init() function.
+- Storage: The Factory maintains a registry (map[kind]method).
+- Extensibility: A new kind of Jewel/Chest is automatically supported 
+  as long as its methods are registered in the Factory.
+
+SESSION
+Each Chest is associated with a KeyJewelKind (the key needed to open it).
+- Example: An AES Chest requires a Password Jewel containing the AES key.
+- Security: When a Chest is opened, the key is requested and stored in 
+  a temporary session maintained in RAM (volatile memory).
+- Lifetime: The session is valid until the Chest is closed or the 
+  computer is rebooted.
+- The session itself is managed by a dedicated Factory.
+
+3. PACKAGE HIERARCHY
+To avoid cyclic dependencies, the following hierarchy is defined:
+
+|-- chest:   Main package; handles command routing.
+|-- command: Defines CLI commands; manages goroutine generation.
+|-- factory: Handles parsing/creation logic and manages concurrency.
+|-- Chest:   Definitions for specific Chest types.
+|-- Jewel:   Definitions for specific Jewel types.
+|-- common:  Basic utilities, constants, and environment variables.

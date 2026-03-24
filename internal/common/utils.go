@@ -1,33 +1,32 @@
 package common
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-func GetChestFilePaths() []string {
-	entries, err := os.ReadDir(ChestBasePath)
+func GetExistingChestPaths() ([]string, error) {
+	entries, err := os.ReadDir(GetChestHome())
 	if err != nil {
-		fmt.Printf("failed to read directory %s: %v\n", ChestBasePath, err)
-		return []string{}
+		return nil, err
 	}
 	var jsonFiles []string
 	for _, entry := range entries {
 		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".json") {
-			fullPath := filepath.Join(ChestBasePath, entry.Name())
+			fullPath := filepath.Join(GetChestHome(), entry.Name())
 			jsonFiles = append(jsonFiles, fullPath)
 		}
 	}
-	return jsonFiles
+	return jsonFiles, nil
 }
 
-func GetChestNames() []string {
-	entries, err := os.ReadDir(ChestBasePath)
+func GetExistingChestNames() ([]string, error) {
+	entries, err := os.ReadDir(GetChestHome())
 	if err != nil {
-		fmt.Printf("failed to read directory %s: %v\n", ChestBasePath, err)
-		return []string{}
+		return nil, err
 	}
 	var names []string
 	for _, entry := range entries {
@@ -36,9 +35,27 @@ func GetChestNames() []string {
 			names = append(names, name)
 		}
 	}
-	return names
+	return names, nil
 }
 
-func DeleteChestFile(chestname string) error {
-	return os.Remove(filepath.Join(ChestBasePath, chestname) + ".json")
+func DeleteExistingChestFile(chestname string) error {
+	if strings.ContainsAny(chestname, "/\\") || chestname == ".." {
+		return fmt.Errorf("invalid chest name: %q", chestname)
+	}
+	return os.Remove(filepath.Join(GetChestHome(), chestname) + ".json")
+}
+
+func GetJsonSession() (json.RawMessage, error) {
+	sessionData, err := os.ReadFile(getChestSessionFilePath())
+	if os.IsNotExist(err) {
+		return json.RawMessage("{}"), nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return json.RawMessage(sessionData), nil
+}
+
+func UpdateExistingJsonSession(newSession json.RawMessage) error {
+	return os.WriteFile(getChestSessionFilePath(), newSession, 0600)
 }

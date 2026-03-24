@@ -1,11 +1,12 @@
 package main
 
 import (
-	. "chest/internal/chest"
-	. "chest/internal/command"
-	. "chest/internal/common"
+	"chest/internal/command"
+	"chest/internal/common"
+	"chest/internal/factory"
 	"fmt"
 	"os"
+	"slices"
 )
 
 // Version viene iniettata a tempo di compilazione tramite il flag:
@@ -14,41 +15,88 @@ import (
 var Version = "development"
 
 func main() {
-	EnsureDir(ChestBasePath)
+	EnsureDir(common.GetChestHome())
 
-	if len(os.Args) > 1 && os.Args[1] == "create" {
-		CreateChest()
-		return
-	}
-	if len(os.Args) > 1 && os.Args[1] == "ls" {
-		ListChests()
+	if len(os.Args) < 2 {
+		fmt.Printf("Chest (Version: %s) is running...\n", Version)
 		return
 	}
 
-	if len(os.Args) > 1 && os.Args[1] == "delete" {
-		DeleteChest()
+	if slices.Contains(command.ChestCommands, os.Args[1]) {
+		switchChestCommand(os.Args[1], os.Args)
 		return
 	}
 
-	if len(os.Args) > 1 && os.Args[1] == "edit" {
-		EditChest()
+	if slices.Contains(factory.GetAvailableJewelKinds(), os.Args[1]) {
+		if slices.Contains(command.JewelCommands, os.Args[2]) || len(os.Args) < 3 {
+			switchJewelCommand(os.Args[2], os.Args)
+			return
+		}
+		command.UseJewel(os.Args[1], os.Args[2])
 		return
-	}
-
-	fmt.Printf("Chest (Version: %s) is running...\n", Version)
-	fmt.Printf("Supported Chest \n")
-	for _, name := range GetKinds() {
-		fmt.Printf("%s\n", name)
 	}
 
 }
 
 func EnsureDir(dir string) error {
-
 	err := os.MkdirAll(dir, 0755)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 	}
-
 	return nil
+}
+
+func switchChestCommand(chestCommand string, args []string) {
+	switch chestCommand {
+	case "create":
+		if len(args) > 2 {
+			command.CreateChestByName(args[2])
+		} else {
+			command.CreateChest()
+		}
+	case "ls":
+		command.ListChests()
+	case "rm":
+		if len(args) > 2 {
+			command.DeleteChestByName(args[2])
+		} else {
+			command.DeleteChest()
+		}
+	case "edit":
+		if len(args) > 2 {
+			command.EditChestByName(args[2])
+		} else {
+			command.EditChest()
+		}
+	default:
+		fmt.Printf("Unknown command: %s\n", chestCommand)
+	}
+}
+
+// da mettere a posto
+func switchJewelCommand(jewelCommand string, args []string) {
+	switch jewelCommand {
+	case "add":
+		if len(args) > 2 {
+			command.AddJewelByName(args[1], args[3])
+		} else {
+			command.AddJewel(args[1])
+		}
+	case "ls":
+		command.ListJewels(args[1])
+	case "rm":
+		if len(args) > 2 {
+			command.RemoveJewelByName(args[2], args[4])
+		} else {
+			command.RemoveJewel(args[2])
+		}
+	case "edit":
+		if len(args) > 2 {
+			command.EditJewelByName(args[2], args[4])
+		} else {
+			command.EditJewel(args[2])
+		}
+	default:
+		fmt.Printf("Unknown command: %s\n", jewelCommand)
+	}
 }

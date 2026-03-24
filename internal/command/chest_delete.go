@@ -1,7 +1,6 @@
 package command
 
 import (
-	. "chest/internal/chest"
 	. "chest/internal/common"
 	"fmt"
 )
@@ -12,7 +11,7 @@ func DeleteChest() {
 }
 
 func DeleteChestByName(chestToDelete string) {
-	chest := GetChestByName(chestToDelete)
+	chest := GetExistingChestByName(chestToDelete)
 	if chest != nil {
 		err := chest.Delete()
 		if err == nil {
