@@ -15,7 +15,10 @@ import (
 var Version = "development"
 
 func main() {
-	EnsureDir(common.GetChestHome())
+	if err := ensureDir(common.GetChestHome()); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
 
 	if len(os.Args) < 2 {
 		fmt.Printf("Chest (Version: %s) is running...\n", Version)
@@ -38,12 +41,8 @@ func main() {
 
 }
 
-func EnsureDir(dir string) error {
-	err := os.MkdirAll(dir, 0755)
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-	}
-	return nil
+func ensureDir(dir string) error {
+	return os.MkdirAll(dir, 0755)
 }
 
 func switchChestCommand(chestCommand string, args []string) {
@@ -73,12 +72,11 @@ func switchChestCommand(chestCommand string, args []string) {
 	}
 }
 
-// da mettere a posto
 func switchJewelCommand(jewelCommand string, args []string) {
 	switch jewelCommand {
 	case "add":
 		if len(args) > 2 {
-			command.AddJewelByName(args[1], args[3])
+			command.AddJewelByName(args[1], args[4])
 		} else {
 			command.AddJewel(args[1])
 		}
