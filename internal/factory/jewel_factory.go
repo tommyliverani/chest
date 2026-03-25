@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+	"strings"
 )
 
 type JewelCreator func(name string, description string) (Jewel, error)
@@ -16,16 +17,16 @@ func RegisterJewelCreator(kind string, creator JewelCreator) {
 	jewelCreatorRegistry[kind] = creator
 }
 
+func RegisterJewelParser(kind string, parser JewelParser) {
+	jewelParserRegistry[kind] = parser
+}
+
 func CreateJewel(kind string, name string, description string) (Jewel, error) {
 	creator, exists := jewelCreatorRegistry[kind]
 	if !exists {
 		return nil, fmt.Errorf("unknown jewel kind: %s", kind)
 	}
 	return creator(name, description)
-}
-
-func RegisterJewelParser(kind string, parser JewelParser) {
-	jewelParserRegistry[kind] = parser
 }
 
 func ParseJewel(data json.RawMessage) (Jewel, error) {
@@ -53,4 +54,37 @@ func GetAvailableJewelKinds() []string {
 	}
 	slices.Sort(availableKinds)
 	return availableKinds
+}
+
+const (
+	jewelChestWidth = 16
+	jewelNameWidth  = 16
+	jewelKindWidth  = 12
+	jewelLineWidth  = 3 + jewelChestWidth + 1 + jewelNameWidth + 1 + jewelKindWidth + 1 + len("DESCRIPTION")
+)
+
+func PrintJewelHeader() {
+	fmt.Printf("     %-*s %-*s %-*s %s\n", jewelNameWidth, "NAME", jewelChestWidth, "CHEST", jewelKindWidth, "KIND", "DESCRIPTION")
+	fmt.Println(strings.Repeat("-", jewelLineWidth))
+}
+
+func PrintJewel(jewel Jewel, chestName string) {
+	fmt.Printf(" %s  %-*s %-*s %-*s %s\n", jewel.GetEmoji(), jewelNameWidth, jewel.GetName(), jewelChestWidth, chestName, jewelKindWidth, jewel.GetKind(), jewel.GetDescription())
+}
+
+func PrintJewelFooter(count int) {
+	fmt.Println(strings.Repeat("-", jewelLineWidth))
+	fmt.Printf("%d jewel(s) available\n", count)
+}
+
+func GetJewelString(jewel Jewel, chestName string) string {
+	return fmt.Sprintf(" %s  %-*s %-*s %-*s %s\n", jewel.GetEmoji(), jewelNameWidth, jewel.GetName(), jewelChestWidth, chestName, jewelKindWidth, jewel.GetKind(), jewel.GetDescription())
+}
+
+func PrintJewels(jewels []Jewel, chestName string) {
+	PrintJewelHeader()
+	for _, j := range jewels {
+		PrintJewel(j, chestName)
+	}
+	PrintJewelFooter(len(jewels))
 }

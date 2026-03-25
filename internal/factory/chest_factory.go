@@ -95,6 +95,15 @@ func PrintChest(chest Chest) {
 	fmt.Printf(" %s  %-*s %-*s %-*s %s\n", chest.GetEmoji(), chestNameWidth+len(name)-len(chest.GetName()), name, chestKindWidth, chest.GetKind(), chestStateWidth, state, chest.GetDescription())
 }
 
+func GetChestString(chest Chest) string {
+	state := "close"
+	name := chest.GetName()
+	if IsOpen(chest.GetName()) {
+		state = "open"
+	}
+	return fmt.Sprintf(" %s  %-*s %-*s %-*s %s\n", chest.GetEmoji(), chestNameWidth+len(name)-len(chest.GetName()), name, chestKindWidth, chest.GetKind(), chestStateWidth, state, chest.GetDescription())
+}
+
 // a chest is available if it has both a creator and a parser registered
 func GetAvailableChestKinds() []string {
 	availableKinds := make([]string, 0, len(chestParserRegistry))

@@ -95,8 +95,8 @@ func (m *MockChest) GetJewels(keyJewel json.RawMessage) ([]factory.Jewel, error)
 
 }
 
-func (m *MockChest) AddJewel(jewel factory.Jewel) error {
-	jewelBytes, err := jewel.ToJson()
+func (m *MockChest) AddJewel(jewelToAdd factory.Jewel, keyJewel json.RawMessage) error {
+	jewelBytes, err := jewelToAdd.ToJson()
 	if err != nil {
 		return fmt.Errorf("failed to marshal jewel: %w", err)
 	}
@@ -104,7 +104,7 @@ func (m *MockChest) AddJewel(jewel factory.Jewel) error {
 	return nil
 }
 
-func (m *MockChest) RemoveJewel(jewelName string) error {
+func (m *MockChest) RemoveJewel(jewelName string, keyJewel json.RawMessage) error {
 	for i, raw := range m.Jewels {
 		var temp struct {
 			Name string `json:"name"`

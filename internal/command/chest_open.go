@@ -45,7 +45,6 @@ func OpenChestByName(chestName string) {
 		os.Exit(1)
 	}
 	fmt.Printf("Chest %s opened successfully\n", chestName)
-	//todo: aggiungere la print dei jewel?
 }
 
 func OpenChest() {

@@ -44,5 +44,4 @@ func CloseChestByName(name string) {
 	}
 	factory.DeleteSession(name)
 	fmt.Printf("Chest %s closed\n", name)
-
 }

@@ -11,8 +11,9 @@ import (
 	"golang.org/x/term"
 )
 
+var reader = bufio.NewReader(os.Stdin)
+
 func ReadField(prompt string) (string, error) {
-	reader := bufio.NewReader(os.Stdin)
 	fmt.Print(prompt)
 	input, err := reader.ReadString('\n')
 	if err != nil {
@@ -32,6 +33,18 @@ func SelectField(prompt string, fields []string) (string, error) {
 		return "", err
 	}
 	return result, nil
+}
+
+func SelectFieldWithIndex(prompt string, fields []string) (int, string, error) {
+	promptUI := promptui.Select{
+		Label: prompt,
+		Items: fields,
+	}
+	index, result, err := promptUI.Run()
+	if err != nil {
+		return -1, "", err
+	}
+	return index, result, nil
 }
 
 func ReadSecret(prompt string) (string, error) {

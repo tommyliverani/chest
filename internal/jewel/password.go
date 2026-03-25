@@ -30,7 +30,7 @@ func ParsePassword(data json.RawMessage) (*Password, error) {
 }
 
 func CreatePassword(name string, description string) (*Password, error) {
-	password, err := common.ReadSecret("Insert password: ")
+	password, err := common.ReadSecret("Insert jewel password: ")
 	if err != nil {
 		return nil, err
 	}
@@ -51,4 +51,32 @@ func init() {
 	factory.RegisterJewelParser(PASSWORD, func(data json.RawMessage) (factory.Jewel, error) {
 		return ParsePassword(data)
 	})
+}
+
+func (m *Password) Edit() error {
+	jewelField, err := common.SelectField("which field do you want to edit?", []string{"description", "password"})
+	if err != nil {
+		return err
+	}
+	// if jewelField == "name" {
+	// 	newName, err := common.ReadField("Insert new name: ")
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	m.Name = newName
+	// }
+	if jewelField == "description" {
+		newDescription, err := common.ReadField("Insert new description: ")
+		if err != nil {
+			return err
+		}
+		m.Description = newDescription
+	} else if jewelField == "password" {
+		newPassword, err := common.ReadSecret("Insert new password: ")
+		if err != nil {
+			return err
+		}
+		m.Password = newPassword
+	}
+	return nil
 }

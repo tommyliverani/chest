@@ -10,4 +10,5 @@ type Jewel interface {
 	GetEmoji() string
 	GetDescription() string
 	ToJson() (json.RawMessage, error)
+	Edit() error
 }

@@ -35,6 +35,7 @@ func DeleteChestByName(chestToDelete string) {
 		fmt.Fprintf(os.Stderr, "Chest '%s' not found\n", chestToDelete)
 		os.Exit(1)
 	}
+	factory.DeleteSession(chestToDelete)
 	err = chest.Delete()
 	if err == nil {
 		fmt.Printf("Chest %s deleted\n", chestToDelete)

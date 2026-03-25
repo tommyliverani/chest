@@ -12,8 +12,8 @@ type Chest interface {
 	Delete() error
 	Edit() error
 	GetJewels(keyJewel json.RawMessage) ([]Jewel, error)
-	AddJewel(jewel Jewel) error
-	RemoveJewel(jewelName string) error
+	AddJewel(jewelToAdd Jewel, keyJewel json.RawMessage) error
+	RemoveJewel(jewelName string, keyJewel json.RawMessage) error
 	ToJson() (json.RawMessage, error)
 	Open() (Jewel, error)
 	Close() error

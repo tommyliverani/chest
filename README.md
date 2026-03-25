@@ -20,7 +20,11 @@ Quickly connect to your infrastructure:
 
 **chest create**
 
-invoca la richiesta di tipo nome, tipo e descrizione definita nel new del base chest
+invoca la richiesta di tipo tra i tipi supportati(chiavi della mappa dei chest parser)
+
+
+
+, nome, tipo e descrizione definita nel new del base chest
 invoca la richiesta del jewel di decript definita nel chest di quel tipo e crea il chest con quel tipo
 
 **chest open <name>** to open a chest
@@ -47,14 +51,6 @@ lancia una goroutine per ogni chest con la funzione printChest
 **chest add <name>** to add a chest
 **chest delete <name>** to delete a chest
 
-#### jewel usage 
-**chest jewel ls** to list all jewel
-**chest jewel add <name>** to add a jewel
-**chest jewel delete<name>** to remove a jewel
-**chest jewel edit <name>** to edit a jewel
-**chest jewel copy <name>** to copy the jewel
-**chest jewel print <name>** to print the jewel
-**chest jewel <name>** to use a jewel
 
 #### esample for kube usage
 

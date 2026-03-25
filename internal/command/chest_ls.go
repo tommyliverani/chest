@@ -10,7 +10,6 @@ import (
 )
 
 func ListChests() {
-
 	chestNames, err := common.GetExistingChestNames()
 	if len(chestNames) == 0 {
 		fmt.Println("No chest available")
