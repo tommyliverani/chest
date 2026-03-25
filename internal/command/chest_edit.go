@@ -1,41 +1,46 @@
 package command
 
 import (
-	. "chest/internal/chest"
-	. "chest/internal/common"
+	"chest/internal/common"
+	"chest/internal/factory"
 	"fmt"
 	"os"
 )
 
 func EditChest() {
-	name, _ := SelectChest(GetChestNames())
-	EditChestByName(name)
+	chestNames, err := common.GetExistingChestNames()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error retrieving chest names: %v\n", err)
+		os.Exit(1)
+	}
+	if len(chestNames) == 0 {
+		fmt.Println("No chests available to edit.")
+		return
+	}
+	chestToEdit, err := common.SelectField("Select chest to edit: ", chestNames)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error selecting chest to edit: %v\n", err)
+		os.Exit(1)
+	}
+	EditChestByName(chestToEdit)
 }
 
 func EditChestByName(name string) {
-	chest := GetExistingChestByName(name)
-	if chest != nil {
-		chest.Edit()
-		chestPath := ChestBasePath + "/" + name + ".json"
-		err := SaveChestToFile(chestPath, chest)
-		if err != nil {
-			fmt.Printf("Error saving chest: %v\n", err)
-		}
+	chest, err := factory.GetExistingChest(name)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error retrieving chest: %v\n", err)
+		os.Exit(1)
 	}
-}
-
-func GetExistingChestByName(name string) Chest {
-	chestPath := ChestBasePath + "/" + name + ".json"
-	chestFile, errRead := os.ReadFile(chestPath)
-	if errRead == nil {
-		chest, errParse := ParseChest(chestFile)
-		if errParse == nil {
-			return chest
-		} else {
-			fmt.Printf("failed to parse chest file %s: %v\n", chestPath, errParse)
-		}
-	} else {
-		fmt.Printf("failed to read chest file %s: %v\n", chestPath, errRead)
+	err = chest.Edit()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error editing chest: %v\n", err)
+		os.Exit(1)
 	}
-	return nil
+	//TODO: manage chest reaniming if name is changed
+	path, err := factory.SaveOrUpdateChest(chest)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error saving chest: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Chest updated in %s\n", path)
 }

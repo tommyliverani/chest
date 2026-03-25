@@ -31,6 +31,10 @@ func CreateMockChest(name string, description string) (factory.Chest, error) {
 	}, nil
 }
 
+func (m *MockChest) Close() error {
+	return nil
+}
+
 func ParseMockChest(data json.RawMessage) (factory.Chest, error) {
 	var mc MockChest
 	err := json.Unmarshal(data, &mc)
@@ -46,20 +50,27 @@ func (m *MockChest) GetEmoji() string { return "📦" }
 
 func (m *MockChest) Delete() error { return common.DeleteExistingChestFile(m.GetName()) }
 
-func (m *MockChest) GetKeyJewelKind() string { return jewel.PASSWORD }
+func (m *MockChest) Open() (factory.Jewel, error) {
+	keyJewel, err := factory.CreateJewel(jewel.PASSWORD, m.GetName()+"KeyJewel", "key jewel to open "+m.GetName())
+	if err != nil {
+		return nil, fmt.Errorf("Error retriving password: %v\n", err)
+	}
+	//TODO: in the real chest we would check if the provided key jewel is correct and only return the content if it is
+	return keyJewel, nil
+}
 
 func (m *MockChest) Edit() error {
-	chestField, err := common.SelectField("whitch field do you want to edit?", []string{"name", "description"})
+	chestField, err := common.SelectField("which field do you want to edit?", []string{"description"})
 	if err != nil {
 		return err
 	}
-	if chestField == "name" {
-		newName, err := common.ReadField("Insert new name: ")
-		if err != nil {
-			return err
-		}
-		m.Name = newName
-	}
+	// if chestField == "name" {
+	// 	newName, err := common.ReadField("Insert new name: ")
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	m.Name = newName
+	// }
 	if chestField == "description" {
 		newDescription, err := common.ReadField("Insert new description: ")
 		if err != nil {

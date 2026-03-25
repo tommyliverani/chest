@@ -55,3 +55,24 @@ func DeleteSession(chestName string) error {
 	delete(sessions, chestName)
 	return saveSessions(sessions)
 }
+
+func IsOpen(chestName string) bool {
+	sessions, err := getSessions()
+	if err != nil {
+		return false
+	}
+	_, exists := sessions[chestName]
+	return exists
+}
+
+func GetOpenChestNames() ([]string, error) {
+	sessions, err := getSessions()
+	if err != nil {
+		return nil, err
+	}
+	openChests := make([]string, 0, len(sessions))
+	for chestName := range sessions {
+		openChests = append(openChests, chestName)
+	}
+	return openChests, nil
+}

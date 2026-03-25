@@ -1,7 +1,6 @@
 package factory
 
 import (
-	. "chest/internal/jewel"
 	"encoding/json"
 )
 
@@ -16,5 +15,6 @@ type Chest interface {
 	AddJewel(jewel Jewel) error
 	RemoveJewel(jewelName string) error
 	ToJson() (json.RawMessage, error)
-	GetKeyJewelKind() string
+	Open() (Jewel, error)
+	Close() error
 }

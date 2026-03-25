@@ -1,9 +1,11 @@
 package factory
 
 import (
+	"chest/internal/common"
 	"encoding/json"
 	"fmt"
 	"slices"
+	"strings"
 )
 
 type ChestCreator func(name string, description string) (Chest, error)
@@ -42,8 +44,59 @@ func ParseChest(data json.RawMessage) (Chest, error) {
 	return parser(data)
 }
 
+func GetExistingChest(name string) (Chest, error) {
+
+	chestJson, err := common.GetExistingChestJson(name)
+	if err != nil {
+		return nil, err
+	}
+	return ParseChest(chestJson)
+}
+
+func SaveOrUpdateChest(chest Chest) (string, error) {
+	jsonChest, err := chest.ToJson()
+	if err != nil {
+		return "", fmt.Errorf("error converting chest to JSON: %w", err)
+	}
+	chestPath, err := common.CreateOrUpdateJsonChestFile(chest.GetName(), jsonChest)
+	if err != nil {
+		return "", fmt.Errorf("error saving chest: %w", err)
+	}
+	return chestPath, nil
+}
+
+const (
+	chestNameWidth  = 16
+	chestKindWidth  = 12
+	chestStateWidth = 10
+	chestLineWidth  = 3 + chestNameWidth + 1 + chestKindWidth + 1 + chestStateWidth + 1 + len("DESCRIPTION")
+)
+
+func PrintChestHeader() {
+	fmt.Printf("     %-*s %-*s %-*s %s\n", chestNameWidth, "NAME", chestKindWidth, "KIND", chestStateWidth, "STATE", "DESCRIPTION")
+	fmt.Println(strings.Repeat("-", chestLineWidth))
+}
+
+func PrintChestFooter(count int) {
+	fmt.Println(strings.Repeat("-", chestLineWidth))
+	fmt.Printf("%d chest(s) available\n", count)
+}
+
+const green = "\033[32m"
+const reset = "\033[0m"
+
+func PrintChest(chest Chest) {
+	state := "close"
+	name := chest.GetName()
+	if IsOpen(chest.GetName()) {
+		state = "open"
+		name = fmt.Sprintf("%s%s%s", green, chest.GetName(), reset)
+	}
+	fmt.Printf(" %s  %-*s %-*s %-*s %s\n", chest.GetEmoji(), chestNameWidth+len(name)-len(chest.GetName()), name, chestKindWidth, chest.GetKind(), chestStateWidth, state, chest.GetDescription())
+}
+
 // a chest is available if it has both a creator and a parser registered
-func GetChestKinds() []string {
+func GetAvailableChestKinds() []string {
 	availableKinds := make([]string, 0, len(chestParserRegistry))
 	for kind := range chestParserRegistry {
 		if _, exists := chestCreatorRegistry[kind]; exists {

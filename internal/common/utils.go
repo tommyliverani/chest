@@ -38,6 +38,15 @@ func GetExistingChestNames() ([]string, error) {
 	return names, nil
 }
 
+func GetExistingChestJson(chestName string) (json.RawMessage, error) {
+	chestPath := filepath.Join(GetChestHome(), chestName+".json")
+	chestFile, errRead := os.ReadFile(chestPath)
+	if errRead != nil {
+		return nil, fmt.Errorf("failed to read chest file %s: %w", chestPath, errRead)
+	}
+	return json.RawMessage(chestFile), nil
+}
+
 func DeleteExistingChestFile(chestname string) error {
 	if strings.ContainsAny(chestname, "/\\") || chestname == ".." {
 		return fmt.Errorf("invalid chest name: %q", chestname)
@@ -58,4 +67,10 @@ func GetJsonSession() (json.RawMessage, error) {
 
 func UpdateExistingJsonSession(newSession json.RawMessage) error {
 	return os.WriteFile(getChestSessionFilePath(), newSession, 0600)
+}
+
+func CreateOrUpdateJsonChestFile(chestName string, jsonData json.RawMessage) (string, error) {
+	chestPath := filepath.Join(GetChestHome(), chestName+".json")
+	err := os.WriteFile(chestPath, jsonData, 0600)
+	return chestPath, err
 }

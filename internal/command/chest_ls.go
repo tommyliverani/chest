@@ -1,45 +1,44 @@
 package command
 
 import (
-	. "chest/internal/chest"
-	. "chest/internal/common"
+	"chest/internal/common"
+	"chest/internal/factory"
 	"fmt"
 	"os"
+	"sync"
+	"sync/atomic"
 )
 
 func ListChests() {
-	PrintChestHeader()
-	for _, chest := range GetAllChests() {
-		PrintChest(chest)
+
+	chestNames, err := common.GetExistingChestNames()
+	if len(chestNames) == 0 {
+		fmt.Println("No chest available")
+		return
 	}
-}
-
-// da rivedere con go routines e jewel
-func GetAllChests() []Chest {
-	var chests []Chest
-	for _, chestPath := range GetChestFilePaths() {
-		chestFile, errRead := os.ReadFile(chestPath)
-		if errRead == nil {
-			chest, errParse := ParseChest(chestFile)
-			if errParse == nil {
-				chests = append(chests, chest)
-			}
-
-		}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error retrieving chest: %v\n", err)
+		os.Exit(1)
 	}
-	return chests
+	factory.PrintChestHeader()
+	wg := sync.WaitGroup{}
+	var chestCount atomic.Int64
+	for _, chestName := range chestNames {
+		wg.Add(1)
+		go ParseAndPrintChest(chestName, &wg, &chestCount)
+	}
+	wg.Wait()
+	factory.PrintChestFooter(int(chestCount.Load()))
 }
 
-func PrintJewelHeader() {
-	fmt.Println("\tNAME\t\tKIND\t\tDESCRIPTION")
-}
-func PrintJewel(jewel Jewel) {
-	fmt.Printf("%s\t%s\t\t%s\t\t%s\n", jewel.GetEmoji(), jewel.GetName(), jewel.GetKind(), jewel.GetDescription())
-}
-
-func PrintJewels(jewels []Jewel) {
-	PrintJewelHeader()
-	for _, j := range jewels {
-		PrintJewel(j)
+func ParseAndPrintChest(chestName string, wg *sync.WaitGroup, chestCount *atomic.Int64) {
+	defer wg.Done()
+	defer func() {
+		recover()
+	}()
+	chest, err := factory.GetExistingChest(chestName)
+	if err == nil {
+		factory.PrintChest(chest)
+		chestCount.Add(1)
 	}
 }

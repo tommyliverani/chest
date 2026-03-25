@@ -1,35 +1,41 @@
 package command
 
 import (
-	. "chest/internal/chest"
-	. "chest/internal/common"
+	"chest/internal/common"
+	"chest/internal/factory"
 	"fmt"
 	"os"
 )
 
 func CreateChest() {
-	name, _ := ReadChestName()
+	name, err := common.ReadField("Insert chest name: ")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading chest name: %v\n", err)
+		os.Exit(1)
+	}
 	CreateChestByName(name)
 }
 
 func CreateChestByName(name string) {
-	kind, _ := SelectChestKind(GetChestKinds())
-	description, _ := ReadChestDescription()
-	creator, _ := GetChestCreator(kind)
-	chest, _ := creator(name, description)
-	chestPath := ChestBasePath + "/" + name + ".json"
-	err := SaveChestToFile(chestPath, chest)
+	kind, err := common.SelectField("Select chest kind: ", factory.GetAvailableChestKinds())
 	if err != nil {
-		fmt.Printf("Error creating chest: %v\n", err)
-		return
+		fmt.Fprintf(os.Stderr, "Error selecting chest kind: %v\n", err)
+		os.Exit(1)
+	}
+	description, err := common.ReadField("Insert chest description: ")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading chest description: %v\n", err)
+		os.Exit(1)
+	}
+	chest, err := factory.CreateChest(kind, name, description)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating chest of kind %s: %v\n", kind, err)
+		os.Exit(1)
+	}
+	chestPath, err := factory.SaveOrUpdateChest(chest)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating chest: %v\n", err)
+		os.Exit(1)
 	}
 	fmt.Printf("Chest created in %s\n", chestPath)
-}
-
-func SaveChestToFile(filename string, chest Chest) error {
-	data, err := chest.ToJson()
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(filename, data, 0644)
 }

@@ -42,20 +42,41 @@ if/else or switch blocks, a Factory pattern is implemented.
   as long as its methods are registered in the Factory.
 
 SESSION
-Each Chest is associated with a KeyJewelKind (the key needed to open it).
-- Example: An AES Chest requires a Password Jewel containing the AES key.
-- Security: When a Chest is opened, the key is requested and stored in 
-  a temporary session maintained in RAM (volatile memory).
+A session tracks which Chests are currently open.
+- Security: When a Chest is opened, the key Jewel is stored in a 
+  temporary session maintained in RAM (volatile memory).
 - Lifetime: The session is valid until the Chest is closed or the 
   computer is rebooted.
 - The session itself is managed by a dedicated Factory.
 
+OPENING A CHEST
+Each Chest implements an Open() method that encapsulates the full 
+opening logic:
+- It internally creates the Jewel needed to open itself (e.g. prompts
+  for a password, reads a key file, etc.).
+- It returns the Jewel as output.
+- The caller (command layer) is only responsible for saving the 
+  returned Jewel into the session.
+- This design keeps the opening logic self-contained inside the Chest
+  and decouples it from the command layer.
+
 3. PACKAGE HIERARCHY
 To avoid cyclic dependencies, the following hierarchy is defined:
 
-|-- chest:   Main package; handles command routing.
-|-- command: Defines CLI commands; manages goroutine generation.
-|-- factory: Handles parsing/creation logic and manages concurrency.
+|-- Chest:   Main package; handles command routing.
+|-- Command: Defines CLI commands; manages goroutine generation.
 |-- Chest:   Definitions for specific Chest types.
 |-- Jewel:   Definitions for specific Jewel types.
-|-- common:  Basic utilities, constants, and environment variables.
+|-- Factory: Define the chest/jewel interface e the creation registry
+ common:  Basic utilities, constants, and environment variables.
+
+
+              chest
+                |
+              Command
+  ______________|_________________
+  |             |                |
+chest-------->jewel---------->factory
+  |_____________|________________|
+                |
+            common
