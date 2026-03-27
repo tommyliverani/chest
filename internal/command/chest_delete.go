@@ -4,43 +4,40 @@ import (
 	"chest/internal/common"
 	"chest/internal/factory"
 	"fmt"
-	"os"
+	"slices"
 )
 
 func DeleteChest() {
-	chestNames, err := common.GetExistingChestNames()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error retrieving chest names: %v\n", err)
-		os.Exit(1)
-	}
-	if len(chestNames) == 0 {
+	existingChests := factory.GetAllChests()
+	if len(existingChests) == 0 {
 		fmt.Println("No chests available to delete.")
 		return
 	}
-	chestToDelete, err := common.SelectField("Select chest to delete: ", chestNames)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error selecting chest to delete: %v\n", err)
-		os.Exit(1)
-	}
-	DeleteChestByName(chestToDelete)
+	chestToDelete := factory.SelectChest("Select chest to delete: ", existingChests)
+	deleteChestJsonAndSession(chestToDelete)
 }
 
 func DeleteChestByName(chestToDelete string) {
-	chest, err := factory.GetExistingChest(chestToDelete)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error retrieving chest: %v\n", err)
-		os.Exit(1)
+	chestNames := factory.GetExistingChestNames()
+	if chestNames != nil && !slices.Contains(chestNames, chestToDelete) {
+		common.PrintErrorAndExit(fmt.Sprintf("Chest '%s' not found", chestToDelete))
 	}
-	if chest == nil {
-		fmt.Fprintf(os.Stderr, "Chest '%s' not found\n", chestToDelete)
-		os.Exit(1)
+	chest, found := factory.FindChestByName(chestToDelete)
+	if !found {
+		common.PrintErrorAndExit(fmt.Sprintf("Chest '%s' not found", chestToDelete))
 	}
-	factory.DeleteSession(chestToDelete)
-	err = chest.Delete()
-	if err == nil {
-		fmt.Printf("Chest %s deleted\n", chestToDelete)
-	} else {
-		fmt.Fprintf(os.Stderr, "Error deleting chest: %v\n", err)
-		os.Exit(1)
+	deleteChestJsonAndSession(chest)
+}
+
+func deleteChestJsonAndSession(chestToDelete factory.Chest) {
+	confirm := common.SelectField(fmt.Sprintf("Are you sure you want to delete '%s'?", chestToDelete.GetName()), []string{"No", "Yes"})
+	if confirm != "Yes" {
+		fmt.Println("Delete cancelled")
+		return
 	}
+	chestToDelete.Delete()
+	err := common.DeleteChestJsonById(chestToDelete.GetId())
+	common.Check(err)
+	factory.DeleteSession(chestToDelete.GetId())
+	fmt.Printf("%s deleted\n", chestToDelete.GetName())
 }

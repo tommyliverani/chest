@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
-	"strings"
 )
+
+//ok
 
 type ChestCreator func(name string, description string) (Chest, error)
 type ChestParser func(data json.RawMessage) (Chest, error)
@@ -31,77 +32,27 @@ func CreateChest(kind string, name string, description string) (Chest, error) {
 }
 
 func ParseChest(data json.RawMessage) (Chest, error) {
-	var helper struct {
-		Kind string `json:"kind"`
-	}
-	if err := json.Unmarshal(data, &helper); err != nil {
-		return nil, fmt.Errorf("error while parsing chest: %w", err)
-	}
-	parser, exists := chestParserRegistry[helper.Kind]
+	kind, err := common.GetKindFromJson(data)
+	common.CheckWithMsg("Error while getting chest kind", err)
+	parser, exists := chestParserRegistry[kind]
 	if !exists {
-		return nil, fmt.Errorf("unknown chest kind: %s", helper.Kind)
+		return nil, fmt.Errorf("unknown chest kind: %s", kind)
 	}
 	return parser(data)
 }
 
-func GetExistingChest(name string) (Chest, error) {
-
-	chestJson, err := common.GetExistingChestJson(name)
-	if err != nil {
-		return nil, err
-	}
+func GetChestById(id string) (Chest, error) {
+	chestJson, err := common.GetChestJsonById(id)
+	common.CheckWithMsg("Error while retrieving chest JSON", err)
 	return ParseChest(chestJson)
 }
 
 func SaveOrUpdateChest(chest Chest) (string, error) {
 	jsonChest, err := chest.ToJson()
-	if err != nil {
-		return "", fmt.Errorf("error converting chest to JSON: %w", err)
-	}
-	chestPath, err := common.CreateOrUpdateJsonChestFile(chest.GetName(), jsonChest)
-	if err != nil {
-		return "", fmt.Errorf("error saving chest: %w", err)
-	}
+	common.CheckWithMsg("Error while converting chest to JSON", err)
+	chestPath, err := common.CreateOrUpdateJsonChestFile(chest.GetId(), jsonChest)
+	common.CheckWithMsg("Error while writing chest file", err)
 	return chestPath, nil
-}
-
-const (
-	chestNameWidth  = 16
-	chestKindWidth  = 12
-	chestStateWidth = 10
-	chestLineWidth  = 3 + chestNameWidth + 1 + chestKindWidth + 1 + chestStateWidth + 1 + len("DESCRIPTION")
-)
-
-func PrintChestHeader() {
-	fmt.Printf("     %-*s %-*s %-*s %s\n", chestNameWidth, "NAME", chestKindWidth, "KIND", chestStateWidth, "STATE", "DESCRIPTION")
-	fmt.Println(strings.Repeat("-", chestLineWidth))
-}
-
-func PrintChestFooter(count int) {
-	fmt.Println(strings.Repeat("-", chestLineWidth))
-	fmt.Printf("%d chest(s) available\n", count)
-}
-
-const green = "\033[32m"
-const reset = "\033[0m"
-
-func PrintChest(chest Chest) {
-	state := "close"
-	name := chest.GetName()
-	if IsOpen(chest.GetName()) {
-		state = "open"
-		name = fmt.Sprintf("%s%s%s", green, chest.GetName(), reset)
-	}
-	fmt.Printf(" %s  %-*s %-*s %-*s %s\n", chest.GetEmoji(), chestNameWidth+len(name)-len(chest.GetName()), name, chestKindWidth, chest.GetKind(), chestStateWidth, state, chest.GetDescription())
-}
-
-func GetChestString(chest Chest) string {
-	state := "close"
-	name := chest.GetName()
-	if IsOpen(chest.GetName()) {
-		state = "open"
-	}
-	return fmt.Sprintf(" %s  %-*s %-*s %-*s %s\n", chest.GetEmoji(), chestNameWidth+len(name)-len(chest.GetName()), name, chestKindWidth, chest.GetKind(), chestStateWidth, state, chest.GetDescription())
 }
 
 // a chest is available if it has both a creator and a parser registered
@@ -114,4 +65,11 @@ func GetAvailableChestKinds() []string {
 	}
 	slices.Sort(availableKinds)
 	return availableKinds
+}
+
+func CheckChestName(oldName string, newName string) error {
+	if oldName != newName && slices.Contains(GetExistingChestNames(), newName) {
+		return fmt.Errorf("A chest with the name %q already exists", newName)
+	}
+	return nil
 }

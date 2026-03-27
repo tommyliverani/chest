@@ -1,5 +1,6 @@
 package common
 
+//ok
 import (
 	"bufio"
 	"fmt"
@@ -13,46 +14,37 @@ import (
 
 var reader = bufio.NewReader(os.Stdin)
 
-func ReadField(prompt string) (string, error) {
+func ReadField(prompt string) string {
 	fmt.Print(prompt)
 	input, err := reader.ReadString('\n')
-	if err != nil {
-		return "", err
-	}
-	trimmedInput := strings.TrimSpace(input)
-	return trimmedInput, nil
+	Check(err)
+	return strings.TrimSpace(input)
 }
 
-func SelectField(prompt string, fields []string) (string, error) {
+func SelectField(prompt string, fields []string) string {
 	promptUI := promptui.Select{
 		Label: prompt,
 		Items: fields,
 	}
 	_, result, err := promptUI.Run()
-	if err != nil {
-		return "", err
-	}
-	return result, nil
+	Check(err)
+	return result
 }
 
-func SelectFieldWithIndex(prompt string, fields []string) (int, string, error) {
+func SelectFieldWithIndex(prompt string, fields []string) (int, string) {
 	promptUI := promptui.Select{
 		Label: prompt,
 		Items: fields,
 	}
 	index, result, err := promptUI.Run()
-	if err != nil {
-		return -1, "", err
-	}
-	return index, result, nil
+	Check(err)
+	return index, result
 }
 
-func ReadSecret(prompt string) (string, error) {
+func ReadSecret(prompt string) string {
 	fmt.Print(prompt)
 	bytePassword, err := term.ReadPassword(int(syscall.Stdin))
-	if err != nil {
-		return "", err
-	}
+	Check(err)
 	fmt.Println()
-	return strings.TrimSpace(string(bytePassword)), nil
+	return strings.TrimSpace(string(bytePassword))
 }

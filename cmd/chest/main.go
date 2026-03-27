@@ -3,7 +3,6 @@ package main
 import (
 	_ "chest/internal/chest"
 	"chest/internal/command"
-	"chest/internal/common"
 	"chest/internal/factory"
 	"fmt"
 	"os"
@@ -16,16 +15,23 @@ import (
 var Version = "development"
 
 var chestCommands = []string{"create", "ls", "rm", "edit", "jewels", "js", "open", "close"}
-var jewelCommands = []string{"add", "rm", "ls", "edit", "jewels", "js"}
+var jewelCommands = []string{"add", "rm", "ls", "edit", "jewels", "js", "copy", "print"}
+
+func printHelp() {
+	fmt.Printf("🏴‍☠️  Chest (Version: %s)\n\n", Version)
+	fmt.Println("Available jewel kinds:")
+	for _, kind := range factory.GetAvailableJewelKinds() {
+		fmt.Println(factory.ShortHelp(kind))
+	}
+	fmt.Println()
+	fmt.Printf("Chest commands: %v\n", chestCommands)
+	fmt.Println("Tip: run './chest <kind> help' for details on a jewel type.")
+}
 
 func main() {
-	if err := ensureDir(common.GetChestHome()); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
-	}
 
-	if len(os.Args) < 2 {
-		fmt.Printf("Chest (Version: %s) is running...\n", Version)
+	if len(os.Args) < 2 || os.Args[1] == "help" {
+		printHelp()
 		return
 	}
 
@@ -35,24 +41,35 @@ func main() {
 	}
 
 	if slices.Contains(factory.GetAvailableJewelKinds(), os.Args[1]) {
-		if len(os.Args) < 3 {
-			//todo: cambiare in printjewel info
-			fmt.Printf("Please provide a command for the jewel (available commands: %v)\n", jewelCommands)
+		if len(os.Args) < 2 {
+			fmt.Printf("Please provide a command for the jewel (available commands: %v) or a jewel kind(available jewel kinds: %v)\n", jewelCommands, factory.GetAvailableJewelKinds())
 			return
 		}
-		if slices.Contains(jewelCommands, os.Args[2]) {
-			switchJewelCommand(os.Args[2], os.Args)
+
+		if len(os.Args) == 3 && os.Args[2] == "help" {
+			fmt.Print(factory.LongHelp(os.Args[1]))
 			return
 		}
-		//command.UseJewel(os.Args[1], os.Args[2])
+
+		if len(os.Args) > 2 && slices.Contains(jewelCommands, os.Args[2]) {
+			switchJewelCommand(os.Args[1], os.Args[2], os.Args)
+			return
+		}
+
+		if len(os.Args) == 3 && slices.Contains(factory.GetAvailableJewelKinds(), os.Args[1]) {
+			command.UseJewelByName(os.Args[1], os.Args[2])
+			return
+		}
+		if len(os.Args) == 2 && slices.Contains(factory.GetAvailableJewelKinds(), os.Args[1]) {
+			command.AskNameAndUseJewel(os.Args[1])
+			return
+		}
+
+		fmt.Printf("Unknown jewel command: %s\n", os.Args[2])
 		return
 	}
 	fmt.Printf("unknown command: %s\n", os.Args[1])
 
-}
-
-func ensureDir(dir string) error {
-	return os.MkdirAll(dir, 0755)
 }
 
 func switchChestCommand(chestCommand string, args []string) {
@@ -81,7 +98,7 @@ func switchChestCommand(chestCommand string, args []string) {
 		if len(args) > 2 {
 			command.OpenChestByName(args[2])
 		} else {
-			command.OpenChest()
+			command.AskNameAndOpenChest()
 		}
 	case "close":
 		if len(args) > 2 {
@@ -92,37 +109,46 @@ func switchChestCommand(chestCommand string, args []string) {
 	case "jewels", "js":
 		command.ListJewels()
 	default:
-		fmt.Printf("Unknown command: %s\n", chestCommand)
+		return
 	}
 }
 
-func switchJewelCommand(jewelCommand string, args []string) {
-	kind := args[1]
+func switchJewelCommand(kind string, jewelCommand string, args []string) {
 	switch jewelCommand {
 	case "add":
 		if len(args) > 3 {
-			command.AddJewelByName(kind, args[3])
+			command.AddJewelToChestByName(kind, args[3])
 		} else {
-			command.AddJewel(kind)
+			command.AskNameAndAddJewel(kind)
 		}
-	case "jewels", "js":
-		command.ListJewelsWithKind(kind)
+	case "rm":
+		if len(args) > 3 {
+			command.RemoveJewelFromChestByName(kind, args[3])
+		} else {
+			command.AskJewelAndRemove(kind)
+		}
+	case "ls", "jewels", "js":
+		command.ListJewelsByKind(kind)
+	case "edit":
+		if len(args) > 3 {
+			command.EditJewelByName(args[3], kind)
+		} else {
+			command.AskJewelAndEdit(kind)
+		}
+	case "copy":
+		if len(args) > 3 {
+			command.CopyJewelByName(kind, args[3])
+		} else {
+			command.AskNameAndCopyJewel(kind)
+		}
+	case "print":
+		if len(args) > 3 {
+			command.PrintJewelByName(kind, args[3])
+		} else {
+			command.AskNameAndPrintJewel(kind)
+		}
 
-	// case "ls":
-	// 	command.ListJewels(args[1])
-	// case "rm":
-	// 	if len(args) > 2 {
-	// 		command.RemoveJewelByName(args[2], args[4])
-	// 	} else {
-	// 		command.RemoveJewel(args[2])
-	// 	}
-	// case "edit":
-	// 	if len(args) > 2 {
-	// 		command.EditJewelByName(args[2], args[4])
-	// 	} else {
-	// 		command.EditJewel(args[2])
-	// 	}
 	default:
-		fmt.Printf("Unknown command: %s\n", jewelCommand)
+		fmt.Printf("Unknown jewel command: %s\n", jewelCommand)
 	}
 }

@@ -1,5 +1,6 @@
 package jewel
 
+// ok
 type baseJewel struct {
 	Name        string `json:"name"`
 	Kind        string `json:"kind"`

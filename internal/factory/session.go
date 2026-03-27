@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 )
 
+// ok
 type Session struct {
-	Jewel json.RawMessage `json:"jewel"`
+	KeyJewel json.RawMessage `json:"jewel"`
 }
 
-type SessionMap = map[string]Session
+type SessionMap = map[string]Session //chestId -> Session

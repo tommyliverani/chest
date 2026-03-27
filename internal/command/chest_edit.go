@@ -4,43 +4,38 @@ import (
 	"chest/internal/common"
 	"chest/internal/factory"
 	"fmt"
-	"os"
+	"slices"
 )
 
 func EditChest() {
-	chestNames, err := common.GetExistingChestNames()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error retrieving chest names: %v\n", err)
-		os.Exit(1)
-	}
-	if len(chestNames) == 0 {
+	existingChests := factory.GetAllChests()
+	if len(existingChests) == 0 {
 		fmt.Println("No chests available to edit.")
 		return
 	}
-	chestToEdit, err := common.SelectField("Select chest to edit: ", chestNames)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error selecting chest to edit: %v\n", err)
-		os.Exit(1)
-	}
-	EditChestByName(chestToEdit)
+	chestToEdit := factory.SelectChest("Select chest to edit: ", existingChests)
+	editChestJson(chestToEdit)
 }
 
-func EditChestByName(name string) {
-	chest, err := factory.GetExistingChest(name)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error retrieving chest: %v\n", err)
-		os.Exit(1)
+func EditChestByName(chestToEdit string) {
+	chestNames := factory.GetExistingChestNames()
+	if chestNames != nil && !slices.Contains(chestNames, chestToEdit) {
+		common.PrintErrorAndExit(fmt.Sprintf("Chest '%s' not found", chestToEdit))
 	}
-	err = chest.Edit()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error editing chest: %v\n", err)
-		os.Exit(1)
+	chest, found := factory.FindChestByName(chestToEdit)
+	if !found {
+		common.PrintErrorAndExit(fmt.Sprintf("Chest '%s' not found", chestToEdit))
 	}
-	//TODO: manage chest reaniming if name is changed
-	path, err := factory.SaveOrUpdateChest(chest)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error saving chest: %v\n", err)
-		os.Exit(1)
-	}
-	fmt.Printf("Chest updated in %s\n", path)
+	editChestJson(chest)
+}
+
+func editChestJson(chestToEdit factory.Chest) {
+	keyJewel, err := factory.CreateKeyJewel(chestToEdit)
+	oldName := chestToEdit.GetName()
+	common.Check(err)
+	common.Check(chestToEdit.Edit(keyJewel))
+	common.Check(factory.CheckChestName(oldName, chestToEdit.GetName()))
+	_, err = factory.SaveOrUpdateChest(chestToEdit)
+	common.Check(err)
+	fmt.Printf("%s edited\n", chestToEdit.GetName())
 }

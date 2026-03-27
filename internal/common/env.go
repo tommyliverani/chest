@@ -8,11 +8,20 @@ import (
 
 var defaultSessionDir = fmt.Sprintf("/run/user/%d", os.Getuid())
 
+func ensureDir(dir string) error {
+	return os.MkdirAll(dir, 0755)
+}
+
+func init() {
+	if err := ensureDir(GetChestHome()); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
 func GetChestHome() string {
 	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		panic(fmt.Sprintf("cannot determine home directory: %v", err))
-	}
+	CheckWithMsg("Failed to get user home directory", err)
 	return getEnv("CHEST_HOME", filepath.Join(homeDir, ".chest"))
 }
 

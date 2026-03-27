@@ -12,17 +12,18 @@ const MOCK string = "mock"
 
 type MockChest struct {
 	baseChest
-	Jewels []json.RawMessage `json:"jewels"`
+	Jewels []json.RawMessage `json:"jewels"` //jewelName -> Jewel json
 }
 
-func init() {
-	factory.RegisterChestCreator(MOCK, CreateMockChest)
-	factory.RegisterChestParser(MOCK, ParseMockChest)
-}
+// func init() {
+// 	factory.RegisterChestCreator(MOCK, CreateMockChest)
+// 	factory.RegisterChestParser(MOCK, ParseMockChest)
+// }
 
 func CreateMockChest(name string, description string) (factory.Chest, error) {
 	return &MockChest{
 		baseChest: baseChest{
+			Id:          common.GenerateChestID(),
 			Name:        name,
 			Kind:        MOCK,
 			Description: description,
@@ -35,6 +36,10 @@ func (m *MockChest) Close() error {
 	return nil
 }
 
+func (m *MockChest) GetKeyJewelKind() string {
+	return jewel.KEY
+}
+
 func ParseMockChest(data json.RawMessage) (factory.Chest, error) {
 	var mc MockChest
 	err := json.Unmarshal(data, &mc)
@@ -44,58 +49,63 @@ func ParseMockChest(data json.RawMessage) (factory.Chest, error) {
 	return &mc, nil
 }
 
+func (b *MockChest) UpdateJewel(jewelName string, jewelToUpdate factory.Jewel, keyJewel factory.Jewel) error {
+	jsonJewel, err := jewelToUpdate.ToJson()
+	if err != nil {
+		return err
+	}
+	for i, raw := range b.Jewels {
+		name, err := common.GetNameFromJson(raw)
+		if err != nil {
+			return err
+		}
+		if name == jewelName {
+			b.Jewels[i] = json.RawMessage(jsonJewel)
+			return nil
+		}
+	}
+	return fmt.Errorf("jewel with name '%s' not found in chest", jewelName)
+}
+
 func (b *MockChest) ToJson() (json.RawMessage, error) { return json.Marshal(b) }
 
 func (m *MockChest) GetEmoji() string { return "📦" }
 
-func (m *MockChest) Delete() error { return common.DeleteExistingChestFile(m.GetName()) }
+func (m *MockChest) Delete() error { return common.DeleteChestJsonById(m.GetName()) }
 
-func (m *MockChest) Open() (factory.Jewel, error) {
-	keyJewel, err := factory.CreateJewel(jewel.PASSWORD, m.GetName()+"KeyJewel", "key jewel to open "+m.GetName())
-	if err != nil {
-		return nil, fmt.Errorf("Error retriving password: %v\n", err)
-	}
+func (m *MockChest) Open(jewel factory.Jewel) error {
 	//TODO: in the real chest we would check if the provided key jewel is correct and only return the content if it is
-	return keyJewel, nil
+	return nil
 }
 
-func (m *MockChest) Edit() error {
-	chestField, err := common.SelectField("which field do you want to edit?", []string{"description"})
-	if err != nil {
-		return err
+func (m *MockChest) Edit(keyJewel factory.Jewel) error {
+	chestField := common.SelectField("which field do you want to edit?", []string{"description", "name"})
+	if chestField == "name" {
+		newName := common.ReadField("Insert new name: ")
+		m.Name = newName
 	}
-	// if chestField == "name" {
-	// 	newName, err := common.ReadField("Insert new name: ")
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	m.Name = newName
-	// }
 	if chestField == "description" {
-		newDescription, err := common.ReadField("Insert new description: ")
-		if err != nil {
-			return err
-		}
+		newDescription := common.ReadField("Insert new description: ")
+
 		m.Description = newDescription
 	}
 	return nil
 }
 
-func (m *MockChest) GetJewels(keyJewel json.RawMessage) ([]factory.Jewel, error) {
+func (m *MockChest) GetJewels(keyJewel factory.Jewel) ([]factory.Jewel, error) {
 	// for the mock chest, we ignore the key jewel and return all jewels
 	var jewels []factory.Jewel
 	for _, raw := range m.Jewels {
-		jewel, err := factory.ParseJewel(raw)
+		j, err := factory.ParseJewel(raw)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse jewel: %w", err)
+			return nil, err
 		}
-		jewels = append(jewels, jewel)
+		jewels = append(jewels, j)
 	}
 	return jewels, nil
-
 }
 
-func (m *MockChest) AddJewel(jewelToAdd factory.Jewel, keyJewel json.RawMessage) error {
+func (m *MockChest) AddJewel(jewelToAdd factory.Jewel, keyJewel factory.Jewel) error {
 	jewelBytes, err := jewelToAdd.ToJson()
 	if err != nil {
 		return fmt.Errorf("failed to marshal jewel: %w", err)
@@ -104,15 +114,14 @@ func (m *MockChest) AddJewel(jewelToAdd factory.Jewel, keyJewel json.RawMessage)
 	return nil
 }
 
-func (m *MockChest) RemoveJewel(jewelName string, keyJewel json.RawMessage) error {
+func (m *MockChest) RemoveJewel(jewel factory.Jewel, keyJewel factory.Jewel) error {
+	jewelName := jewel.GetName()
 	for i, raw := range m.Jewels {
-		var temp struct {
-			Name string `json:"name"`
+		name, err := common.GetNameFromJson(raw)
+		if err != nil {
+			return err
 		}
-		if err := json.Unmarshal(raw, &temp); err != nil {
-			continue
-		}
-		if temp.Name == jewelName {
+		if name == jewelName {
 			m.Jewels = append(m.Jewels[:i], m.Jewels[i+1:]...)
 			return nil
 		}

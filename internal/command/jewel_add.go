@@ -4,80 +4,63 @@ import (
 	"chest/internal/common"
 	"chest/internal/factory"
 	"fmt"
+	"os"
 )
 
-func AddJewel(kind string) {
-	name, err := common.ReadField("Insert jewel name: ")
-	if err != nil {
-		fmt.Printf("Error reading jewel name: %v\n", err)
+func AskNameAndAddJewel(jewelKind string) {
+	openChests := factory.GetOpenChestIds()
+	if len(openChests) == 0 {
+		fmt.Fprintln(os.Stderr, "No open chests available, open a chest before adding jewels")
 		return
 	}
-	AddJewelByName(kind, name)
+	var chestToAddJewel factory.Chest
+	if len(openChests) > 1 {
+		fmt.Println("Multiple open chests available")
+		openChests := factory.GetAllOpenChests()
+		chestToAddJewel = factory.SelectChest("Select chest to add jewel: ", openChests)
+		return
+	} else {
+		chestToAddJewel, _ = factory.GetChestById(openChests[0])
+	}
+	name := common.ReadField("Insert jewel name: ")
+	addJewelToChest(chestToAddJewel, jewelKind, name)
 }
 
-func AddJewelByName(kind string, name string) {
-	openChest, err := factory.GetOpenChestNames()
-	if err != nil {
-		fmt.Printf("Error retrieving open chests: %v\n", err)
+func AddJewelToChestByName(jewelKind string, jewelName string) {
+	openChests := factory.GetOpenChestIds()
+	if len(openChests) == 0 {
+		fmt.Fprintln(os.Stderr, "No open chests available, open a chest before adding jewels")
 		return
 	}
-	if len(openChest) == 0 {
-		fmt.Println("No open chests available. Please open a chest before adding a jewel.")
+	var chestToAddJewel factory.Chest
+	if len(openChests) > 1 {
+		fmt.Println("Multiple open chests available")
+		openChests := factory.GetAllOpenChests()
+		chestToAddJewel = factory.SelectChest("Select chest to add jewel: ", openChests)
 		return
-	}
-	var selectedChest string
-	if len(openChest) > 1 {
-		selectedChest, err = common.SelectField("Select chest to add the jewel to: ", openChest)
-		if err != nil {
-			fmt.Printf("Error selecting chest: %v\n", err)
-			return
-		}
 	} else {
-		//inserire promt di conferma per aggiungere alla chest aperta
-		response, err := common.SelectField(fmt.Sprintf("The jewel will be addet to chest %s, ok? (y/n): ", openChest[0]), []string{"y", "n"})
-		if err != nil {
-			fmt.Printf("Error reading input: %v\n", err)
-			return
-		}
-		if response != "y" && response != "Y" {
-			fmt.Println("Aborting jewel addition.")
-			return
-		}
-		selectedChest = openChest[0]
+		chestToAddJewel, _ = factory.GetChestById(openChests[0])
 	}
-	keyJewel, exists, err := factory.GetKeyJewel(selectedChest)
-	if err != nil {
-		fmt.Printf("Error retrieving key jewel for chest: %v\n", err)
-		return
+	addJewelToChest(chestToAddJewel, jewelKind, jewelName)
+}
+
+func addJewelToChest(chestToAddJewel factory.Chest, jewelKind string, name string) {
+	sameNameAndKindJewels := factory.FindJewelsByKindAndNameFromOpenChests(jewelKind, name)
+	if len(sameNameAndKindJewels) > 0 {
+		common.PrintErrorAndExit(fmt.Sprintf("A jewel of kind %s with name %s already exists in open chests", jewelKind, name))
 	}
-	if !exists {
-		fmt.Println("No key jewel found for the selected chest.")
-		return
+
+	description := common.ReadField("Insert jewel description: ")
+	jewel, err := factory.CreateJewel(jewelKind, name, description)
+	common.Check(err)
+	keyJewel, found := factory.GetKeyJewelFromSession(chestToAddJewel.GetId())
+	if !found {
+		common.PrintErrorAndExit("Key jewel not found in session")
 	}
-	description, err := common.ReadField("Insert jewel description: ")
-	if err != nil {
-		fmt.Printf("Error reading jewel description: %v\n", err)
-		return
-	}
-	chest, err := factory.GetExistingChest(selectedChest)
-	if err != nil {
-		fmt.Printf("Error retrieving chest: %v\n", err)
-		return
-	}
-	jewel, err := factory.CreateJewel(kind, name, description)
-	if err != nil {
-		fmt.Printf("Error creating jewel of kind %s: %v\n", kind, err)
-		return
-	}
-	err = chest.AddJewel(jewel, keyJewel)
-	if err != nil {
-		fmt.Printf("Error adding jewel to chest: %v\n", err)
-		return
-	}
-	_, err = factory.SaveOrUpdateChest(chest)
-	if err != nil {
-		fmt.Printf("Error saving chest: %v\n", err)
-		return
-	}
-	fmt.Printf("Jewel %s added to chest %s\n", name, selectedChest)
+
+	err = chestToAddJewel.AddJewel(jewel, keyJewel)
+	common.Check(err)
+	_, err = factory.SaveOrUpdateChest(chestToAddJewel)
+	common.Check(err)
+	fmt.Printf("Jewel %s added to chest %s\n", name, chestToAddJewel.GetName())
 }

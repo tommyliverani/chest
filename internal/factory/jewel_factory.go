@@ -1,11 +1,13 @@
 package factory
 
 import (
+	"chest/internal/common"
 	"encoding/json"
 	"fmt"
 	"slices"
-	"strings"
 )
+
+//ok
 
 type JewelCreator func(name string, description string) (Jewel, error)
 type JewelParser func(data json.RawMessage) (Jewel, error)
@@ -30,16 +32,11 @@ func CreateJewel(kind string, name string, description string) (Jewel, error) {
 }
 
 func ParseJewel(data json.RawMessage) (Jewel, error) {
-	var helper struct {
-		Kind string `json:"kind"`
-	}
-	parseError := json.Unmarshal(data, &helper)
-	if parseError != nil {
-		return nil, fmt.Errorf("error while parsing jewel: %w", parseError)
-	}
-	parser, exists := jewelParserRegistry[helper.Kind]
+	kind, err := common.GetKindFromJson(data)
+	common.CheckWithMsg("Error while getting jewel kind", err)
+	parser, exists := jewelParserRegistry[kind]
 	if !exists {
-		return nil, fmt.Errorf("unknown jewel kind: %s", helper.Kind)
+		return nil, fmt.Errorf("unknown jewel kind: %s", kind)
 	}
 	return parser(data)
 }
@@ -56,35 +53,7 @@ func GetAvailableJewelKinds() []string {
 	return availableKinds
 }
 
-const (
-	jewelChestWidth = 16
-	jewelNameWidth  = 16
-	jewelKindWidth  = 12
-	jewelLineWidth  = 3 + jewelChestWidth + 1 + jewelNameWidth + 1 + jewelKindWidth + 1 + len("DESCRIPTION")
-)
-
-func PrintJewelHeader() {
-	fmt.Printf("     %-*s %-*s %-*s %s\n", jewelNameWidth, "NAME", jewelChestWidth, "CHEST", jewelKindWidth, "KIND", "DESCRIPTION")
-	fmt.Println(strings.Repeat("-", jewelLineWidth))
-}
-
-func PrintJewel(jewel Jewel, chestName string) {
-	fmt.Printf(" %s  %-*s %-*s %-*s %s\n", jewel.GetEmoji(), jewelNameWidth, jewel.GetName(), jewelChestWidth, chestName, jewelKindWidth, jewel.GetKind(), jewel.GetDescription())
-}
-
-func PrintJewelFooter(count int) {
-	fmt.Println(strings.Repeat("-", jewelLineWidth))
-	fmt.Printf("%d jewel(s) available\n", count)
-}
-
-func GetJewelString(jewel Jewel, chestName string) string {
-	return fmt.Sprintf(" %s  %-*s %-*s %-*s %s\n", jewel.GetEmoji(), jewelNameWidth, jewel.GetName(), jewelChestWidth, chestName, jewelKindWidth, jewel.GetKind(), jewel.GetDescription())
-}
-
-func PrintJewels(jewels []Jewel, chestName string) {
-	PrintJewelHeader()
-	for _, j := range jewels {
-		PrintJewel(j, chestName)
-	}
-	PrintJewelFooter(len(jewels))
+func CreateKeyJewel(chest Chest) (Jewel, error) {
+	kind := chest.GetKeyJewelKind()
+	return CreateJewel(kind, "keyJewelFor"+chest.GetName(), "keyJewelDescription")
 }
