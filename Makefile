@@ -77,33 +77,13 @@ release:
 deliver:
 	$(eval DELIVER_VERSION := $(shell git describe --tags --exact-match 2>/dev/null || echo ""))
 	@if [ -z "$(DELIVER_VERSION)" ]; then echo "Error: HEAD is not on an exact tag. Run 'make release VERSION=vX.Y.Z' first."; exit 1; fi
-	@if [ "$$(git rev-parse --abbrev-ref HEAD)" != "$(MAIN_BRANCH)" ]; then echo "Error: Releases must be made from $(MAIN_BRANCH)!"; exit 1; fi
 	@command -v gh >/dev/null 2>&1 || { echo "Installing GitHub CLI..."; sudo apt-get install -y gh; }
-	@echo "[DELIVER] --- Building binaries for version $(DELIVER_VERSION) ---"
+	@echo "[DELIVER] --- Building binary for version $(DELIVER_VERSION) ---"
 	@mkdir -p dist
-	GOOS=linux   GOARCH=amd64 go build -ldflags "-X main.Version=$(DELIVER_VERSION)" -o dist/$(BINARY_NAME)-linux-amd64   ./cmd/chest
-	GOOS=darwin  GOARCH=amd64 go build -ldflags "-X main.Version=$(DELIVER_VERSION)" -o dist/$(BINARY_NAME)-darwin-amd64  ./cmd/chest
-	GOOS=windows GOARCH=amd64 go build -ldflags "-X main.Version=$(DELIVER_VERSION)" -o dist/$(BINARY_NAME)-windows-amd64.exe ./cmd/chest
+	GOOS=linux GOARCH=amd64 go build -ldflags "-X main.Version=$(DELIVER_VERSION)" -o dist/$(BINARY_NAME)-linux-amd64 ./cmd/chest
 	@echo "[DELIVER] --- Creating GitHub release $(DELIVER_VERSION) ---"
 	gh release create $(DELIVER_VERSION) \
 		dist/$(BINARY_NAME)-linux-amd64 \
-		dist/$(BINARY_NAME)-darwin-amd64 \
-		dist/$(BINARY_NAME)-windows-amd64.exe \
-		--title "$(DELIVER_VERSION)" \
-		--generate-notes
-	@echo "🚀 Release $(DELIVER_VERSION) published on GitHub!"
-	@command -v gh >/dev/null 2>&1 || { echo "Installing GitHub CLI..."; sudo apt-get install -y gh; }
-	@echo "[DELIVER] --- Building binaries for version $(DELIVER_VERSION) ---"
-	@mkdir -p dist
-	GOOS=linux   GOARCH=amd64 go build -ldflags "-X main.Version=$(DELIVER_VERSION)" -o dist/$(BINARY_NAME)-linux-amd64   ./cmd/chest
-	GOOS=darwin  GOARCH=amd64 go build -ldflags "-X main.Version=$(DELIVER_VERSION)" -o dist/$(BINARY_NAME)-darwin-amd64  ./cmd/chest
-	GOOS=windows GOARCH=amd64 go build -ldflags "-X main.Version=$(DELIVER_VERSION)" -o dist/$(BINARY_NAME)-windows-amd64.exe ./cmd/chest
-	@echo "[DELIVER] --- Pushing tag $(DELIVER_VERSION) and creating GitHub release ---"
-	git push origin $(DELIVER_VERSION)
-	gh release create $(DELIVER_VERSION) \
-		dist/$(BINARY_NAME)-linux-amd64 \
-		dist/$(BINARY_NAME)-darwin-amd64 \
-		dist/$(BINARY_NAME)-windows-amd64.exe \
 		--title "$(DELIVER_VERSION)" \
 		--generate-notes
 	@echo "🚀 Release $(DELIVER_VERSION) published on GitHub!"

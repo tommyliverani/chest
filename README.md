@@ -1,4 +1,6 @@
-# 💎 Don't lost your jewels, keep them in a chest!
+# 🏴‍☠️ CHEST
+
+#### Don't lose your jewels, keep them in a chest!
 
 A minimalist CLI secret manager to store credentials, keys, and configurations — and use them directly from the terminal.
 
