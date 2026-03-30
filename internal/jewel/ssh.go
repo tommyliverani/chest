@@ -59,7 +59,7 @@ func init() {
 		return ParseSshKey(data)
 	})
 	factory.RegisterJewelHelp(SSH_KIND, factory.JewelHelp{
-		Emoji:    "🖥️ ",
+		Emoji:    "🧭",
 		Name:     "ssh",
 		Short:    "stores SSH credentials (username, host, password)",
 		Behavior: "opens an interactive SSH session to the stored host",
