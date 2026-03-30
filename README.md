@@ -10,26 +10,30 @@ A minimalist CLI secret manager to store credentials, keys, and configurations â
 
 ### Requirements
 
-- Go 1.25+
-- `xclip`, `xsel`, or `wl-copy` for clipboard support (Linux)
+- `xclip`, `xsel`, or `wl-copy` for clipboard support
 
 ```bash
 # Install clipboard tool (pick one)
 sudo apt install xclip
 ```
 
-### Build
+### Download binary (Linux amd64) and intstall
 
 ```bash
+wget -qO chest https://github.com/tommyliverani/chest/releases/latest/download/chest-linux-amd64 && chmod +x chest && sudo mv chest /usr/local/bin/chest
+```
+
+### Build from source
+
+Requires Go 1.25+.
+
+```bash
+git clone https://github.com/tommyliverani/chest.git
+cd chest
 make build
-# produces ./chest binary
+sudo mv chest /usr/local/bin/chest
 ```
 
-Or inject the version from git:
-
-```bash
-go build -ldflags "-X main.Version=$(git describe --tags --always)" -o chest ./cmd/chest
-```
 
 ---
 
