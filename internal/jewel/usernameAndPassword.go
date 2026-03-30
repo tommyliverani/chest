@@ -5,7 +5,6 @@ import (
 	"chest/internal/factory"
 	"encoding/json"
 	"fmt"
-	"strings"
 )
 
 const USERNAME_PASSWORD_KIND = "up"
@@ -81,8 +80,11 @@ func (u *UsernameAndPassword) Edit() error {
 }
 
 func (u *UsernameAndPassword) Print() {
-	masked := strings.Repeat("*", len(u.Password))
-	fmt.Printf("Username: %s\nPassword: %s\n", u.Username, masked)
+	confirm := common.SelectField(fmt.Sprintf("Are you sure you want to print the credentials for '%s'?", u.Name), []string{"No", "Yes"})
+	if confirm != "Yes" {
+		return
+	}
+	fmt.Printf("Username: %s\nPassword: %s\n", u.Username, u.Password)
 }
 
 func (u *UsernameAndPassword) Copy() {
