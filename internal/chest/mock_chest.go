@@ -12,7 +12,7 @@ const MOCK string = "mock"
 
 type MockChest struct {
 	baseChest
-	Jewels []json.RawMessage `json:"jewels"` //jewelName -> Jewel json
+	Jewels []json.RawMessage `json:"jewels"` // jewelName -> Jewel json
 }
 
 // func init() {

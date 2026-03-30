@@ -7,8 +7,6 @@ import (
 	"slices"
 )
 
-//ok
-
 type JewelCreator func(name string, description string) (Jewel, error)
 type JewelParser func(data json.RawMessage) (Jewel, error)
 

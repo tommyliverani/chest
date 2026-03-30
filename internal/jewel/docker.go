@@ -12,7 +12,7 @@ import (
 
 const DOCKER_KIND = "docker"
 
-//da testare
+// da testare
 
 type DockerRegistry struct {
 	baseJewel
@@ -23,7 +23,7 @@ type DockerRegistry struct {
 
 func (d *DockerRegistry) GetEmoji() string { return "🐳" }
 
-func (d *DockerRegistry) ToJson() (json.RawMessage, error) { return json.Marshal(d) }
+func (d *DockerRegistry) ToJson() (json.RawMessage, error) { return json.Marshal(d) } //nolint:gosec
 
 func ParseDockerRegistry(data json.RawMessage) (*DockerRegistry, error) {
 	var dr DockerRegistry
@@ -103,7 +103,7 @@ func (d *DockerRegistry) Copy() {
 }
 
 func (d *DockerRegistry) Use() {
-	cmd := exec.Command("docker", "login", d.Url, "-u", d.Username, "-p", d.Password)
+	cmd := exec.Command("docker", "login", d.Url, "-u", d.Username, "-p", d.Password) //nolint:gosec
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

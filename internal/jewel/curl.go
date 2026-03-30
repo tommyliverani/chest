@@ -42,7 +42,7 @@ type Curl struct {
 
 func (c *Curl) GetEmoji() string { return "🌐" }
 
-func (c *Curl) ToJson() (json.RawMessage, error) { return json.Marshal(c) }
+func (c *Curl) ToJson() (json.RawMessage, error) { return json.Marshal(c) } //nolint:gosec
 
 func ParseCurl(data json.RawMessage) (*Curl, error) {
 	var curl Curl
@@ -146,9 +146,7 @@ func (c *Curl) Edit() error {
 
 func (c *Curl) buildArgs(maskPassword bool) []string {
 	args := []string{"-X", c.Method}
-	for _, o := range c.Options {
-		args = append(args, o)
-	}
+	args = append(args, c.Options...)
 	if c.Username != "" {
 		pass := c.Password
 		if maskPassword {
@@ -172,7 +170,7 @@ func (c *Curl) Copy() {
 
 func (c *Curl) Use() {
 	args := c.buildArgs(false)
-	cmd := exec.Command("curl", args...)
+	cmd := exec.Command("curl", args...) //nolint:gosec
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

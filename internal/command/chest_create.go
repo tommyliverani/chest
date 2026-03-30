@@ -14,7 +14,7 @@ func CreateChest() {
 
 func CreateChestByName(name string) {
 	common.Check(factory.CheckChestName("", name))
-	//kind := common.SelectField("Select chest kind: ", factory.GetAvailableChestKinds())
+	// kind := common.SelectField("Select chest kind: ", factory.GetAvailableChestKinds())
 	kind := "aes" // aes is the only available chest kind for now, so we skip the selection
 	description := common.ReadField("Insert chest description: ")
 	chest, err := factory.CreateChest(kind, name, description)

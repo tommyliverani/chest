@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 )
 
-//ok
-
 type Jewel interface {
 	GetName() string
 	GetKind() string

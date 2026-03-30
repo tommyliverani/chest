@@ -7,8 +7,6 @@ import (
 	"slices"
 )
 
-//ok
-
 type ChestCreator func(name string, description string) (Chest, error)
 type ChestParser func(data json.RawMessage) (Chest, error)
 
@@ -69,7 +67,7 @@ func GetAvailableChestKinds() []string {
 
 func CheckChestName(oldName string, newName string) error {
 	if oldName != newName && slices.Contains(GetExistingChestNames(), newName) {
-		return fmt.Errorf("A chest with the name %q already exists", newName)
+		return fmt.Errorf("a chest with the name %q already exists", newName)
 	}
 	return nil
 }

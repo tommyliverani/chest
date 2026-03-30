@@ -9,7 +9,7 @@ import (
 var defaultSessionDir = fmt.Sprintf("/run/user/%d", os.Getuid())
 
 func ensureDir(dir string) error {
-	return os.MkdirAll(dir, 0755)
+	return os.MkdirAll(dir, 0750)
 }
 
 func init() {

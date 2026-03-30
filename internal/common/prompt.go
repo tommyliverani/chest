@@ -1,6 +1,5 @@
 package common
 
-//ok
 import (
 	"bufio"
 	"fmt"

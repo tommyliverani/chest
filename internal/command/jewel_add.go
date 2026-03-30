@@ -18,7 +18,6 @@ func AskNameAndAddJewel(jewelKind string) {
 		fmt.Println("Multiple open chests available")
 		openChests := factory.GetAllOpenChests()
 		chestToAddJewel = factory.SelectChest("Select chest to add jewel: ", openChests)
-		return
 	} else {
 		chestToAddJewel, _ = factory.GetChestById(openChests[0])
 	}
@@ -37,7 +36,6 @@ func AddJewelToChestByName(jewelKind string, jewelName string) {
 		fmt.Println("Multiple open chests available")
 		openChests := factory.GetAllOpenChests()
 		chestToAddJewel = factory.SelectChest("Select chest to add jewel: ", openChests)
-		return
 	} else {
 		chestToAddJewel, _ = factory.GetChestById(openChests[0])
 	}

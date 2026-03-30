@@ -3,14 +3,26 @@ package common
 import (
 	"fmt"
 	"os"
-
-	"golang.design/x/clipboard"
+	"os/exec"
+	"strings"
 )
 
 func WriteToClipboard(text string) {
-	if err := clipboard.Init(); err != nil {
-		fmt.Fprintf(os.Stderr, "clipboard init failed: %v\n", err)
-		return
+	candidates := [][]string{
+		{"xclip", "-selection", "clipboard"},
+		{"xsel", "--clipboard", "--input"},
+		{"wl-copy"},
 	}
-	clipboard.Write(clipboard.FmtText, []byte(text))
+	for _, args := range candidates {
+		if _, err := exec.LookPath(args[0]); err != nil {
+			continue
+		}
+		cmd := exec.Command(args[0], args[1:]...) //nolint:gosec
+		cmd.Stdin = strings.NewReader(text)
+		if err := cmd.Run(); err == nil {
+			return
+		}
+	}
+	fmt.Fprintf(os.Stderr, "clipboard: install xclip, xsel, or wl-copy\n")
+	_ = os.Stderr
 }

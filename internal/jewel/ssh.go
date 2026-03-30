@@ -14,8 +14,6 @@ import (
 	"golang.org/x/term"
 )
 
-// ok
-
 const SSH_KIND = "ssh"
 
 type SshKey struct {
@@ -25,9 +23,9 @@ type SshKey struct {
 	Password string `json:"password"`
 }
 
-func (s *SshKey) GetEmoji() string { return "🖥️ " }
+func (s *SshKey) GetEmoji() string { return "🧭" }
 
-func (s *SshKey) ToJson() (json.RawMessage, error) { return json.Marshal(s) }
+func (s *SshKey) ToJson() (json.RawMessage, error) { return json.Marshal(s) } //nolint:gosec
 
 func ParseSshKey(data json.RawMessage) (*SshKey, error) {
 	var sk SshKey
@@ -71,7 +69,7 @@ func init() {
 			"edit":  "edits name, description, username, host or password",
 			"rm":    "removes an SSH entry from the open chest",
 			"print": "shows username and host (password hidden)",
-			"copy":  "no-op",
+			"copy":  "copies the ssh command (ssh user@host) to the clipboard",
 		},
 	})
 }
@@ -94,10 +92,16 @@ func (s *SshKey) Edit() error {
 }
 
 func (s *SshKey) Print() {
-	fmt.Printf("Username: %s\nHost:     %s\n", s.Username, s.Url)
+	confirm := common.SelectField(fmt.Sprintf("Are you sure you want to print the credentials for '%s'?", s.Name), []string{"No", "Yes"})
+	if confirm != "Yes" {
+		return
+	}
+	fmt.Printf("Username: %s\nHost:     %s\nPassword: %s\n", s.Username, s.Url, s.Password)
 }
 
-func (s *SshKey) Copy() {}
+func (s *SshKey) Copy() {
+	common.WriteToClipboard(fmt.Sprintf("ssh %s@%s", s.Username, s.Url))
+}
 
 // Use opens an interactive SSH session using the stored password (no external tools required).
 func (s *SshKey) Use() {
@@ -126,23 +130,23 @@ func (s *SshKey) Use() {
 		fmt.Fprintf(os.Stderr, "SSH connection failed: %v\n", err)
 		return
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	session, err := client.NewSession()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create session: %v\n", err)
 		return
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
-	fd := int(os.Stdin.Fd())
+	fd := int(os.Stdin.Fd()) //nolint:gosec
 	if term.IsTerminal(fd) {
 		oldState, err := term.MakeRaw(fd)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to set terminal raw mode: %v\n", err)
 			return
 		}
-		defer term.Restore(fd, oldState)
+		defer func() { _ = term.Restore(fd, oldState) }()
 
 		w, h, err := term.GetSize(fd)
 		if err != nil {
@@ -168,5 +172,7 @@ func (s *SshKey) Use() {
 		return
 	}
 
-	session.Wait()
+	if err := session.Wait(); err != nil {
+		fmt.Fprintf(os.Stderr, "session ended: %v\n", err)
+	}
 }

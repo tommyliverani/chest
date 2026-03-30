@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 )
 
-//ok
-
 type Chest interface {
 	GetId() string
 	GetName() string

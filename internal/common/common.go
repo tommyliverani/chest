@@ -1,7 +1,5 @@
 package common
 
-//ok
-
 import (
 	"encoding/json"
 	"fmt"
@@ -53,7 +51,7 @@ func GetExistingChestIds() ([]string, error) {
 
 func GetChestJsonById(chestId string) (json.RawMessage, error) {
 	chestPath := filepath.Join(GetChestHome(), chestId+".json")
-	chestFile, errRead := os.ReadFile(chestPath)
+	chestFile, errRead := os.ReadFile(chestPath) //nolint:gosec
 	if errRead != nil {
 		return nil, errRead
 	}

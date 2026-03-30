@@ -22,7 +22,7 @@ type Openshift struct {
 
 func (o *Openshift) GetEmoji() string { return "♦️" }
 
-func (o *Openshift) ToJson() (json.RawMessage, error) { return json.Marshal(o) }
+func (o *Openshift) ToJson() (json.RawMessage, error) { return json.Marshal(o) } //nolint:gosec
 
 func ParseOpenshift(data json.RawMessage) (*Openshift, error) {
 	var oc Openshift
@@ -98,7 +98,7 @@ func (o *Openshift) Copy() {
 }
 
 func (o *Openshift) Use() {
-	cmd := exec.Command("oc", "login", o.ApiUrl, "--token="+o.ApiToken)
+	cmd := exec.Command("oc", "login", o.ApiUrl, "--token="+o.ApiToken) //nolint:gosec
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

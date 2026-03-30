@@ -1,4 +1,6 @@
-# .golangci.yml
+# .golangci.yaml
+version: "2"
+
 run:
   timeout: 5m
   modules-download-mode: readonly
@@ -14,17 +16,14 @@ linters:
     - revive      # Checks for coding style and documentation consistency
     - gocritic    # Provides suggestions to make code more "Go-idiomatic"
     - bodyclose   # Verifies that HTTP/socket bodies are closed correctly (agent safety)
-
-linters-settings:
-  gosec:
-    # Exclude G104: often ignored if manual file closure error handling is preferred
-    excludes:
-      - G104
-  revive:
-    rules:
-      - name: exported
-        arguments:
-          - "disableStutteringCheck" 
+  settings:
+    gosec:
+      excludes:
+        - G104
+    revive:
+      rules:
+        - name: exported
+          disabled: true
 
 issues:
   exclude-use-default: false

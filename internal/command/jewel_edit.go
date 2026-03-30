@@ -42,7 +42,7 @@ func editJewelInChest(chestName string, jewelToEdit factory.Jewel, oldName strin
 	if !found {
 		common.PrintErrorAndExit(fmt.Sprintf("Key jewel for chest %s not found in session", chestName))
 	}
-	jewelToEdit.Edit()
+	common.Check(jewelToEdit.Edit())
 	if jewelToEdit.GetName() != oldName {
 		sameNameAndKindJewels := factory.FindJewelsByKindAndNameFromOpenChests(jewelToEdit.GetKind(), jewelToEdit.GetName())
 		if len(sameNameAndKindJewels) > 0 {

@@ -13,7 +13,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// ok
 const KUBECONFIG_KIND = "kube"
 
 type Kubeconfig struct {
@@ -92,7 +91,7 @@ func (k *Kubeconfig) Copy() {}
 // Use merges the kubeconfig into ~/.kube/config and sets current-context.
 func (k *Kubeconfig) Use() {
 	kubeDir := filepath.Join(os.Getenv("HOME"), ".kube")
-	if err := os.MkdirAll(kubeDir, 0700); err != nil {
+	if err := os.MkdirAll(kubeDir, 0700); err != nil { //nolint:gosec
 		common.Check(err)
 		return
 	}
@@ -117,7 +116,7 @@ func (k *Kubeconfig) Use() {
 		common.Check(err)
 		return
 	}
-	if err := os.WriteFile(kubeConfigPath, out, 0600); err != nil {
+	if err := os.WriteFile(kubeConfigPath, out, 0600); err != nil { //nolint:gosec
 		common.Check(err)
 		return
 	}
@@ -142,7 +141,7 @@ func parseKubeconfigYaml(data []byte) (map[string]interface{}, error) {
 }
 
 func loadExistingKubeconfig(path string) (map[string]interface{}, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec
 	if os.IsNotExist(err) {
 		return map[string]interface{}{
 			"apiVersion":      "v1",

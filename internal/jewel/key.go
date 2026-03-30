@@ -1,6 +1,5 @@
 package jewel
 
-//ok
 import (
 	"chest/internal/common"
 	"chest/internal/factory"
@@ -87,10 +86,6 @@ func (p *Key) Print() {
 		return
 	}
 	fmt.Println(p.Key)
-}
-
-func printKey(j *Key) {
-	fmt.Println(j.Key)
 }
 
 func (p *Key) Copy() {

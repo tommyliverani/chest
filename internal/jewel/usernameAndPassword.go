@@ -18,7 +18,7 @@ type UsernameAndPassword struct {
 
 func (u *UsernameAndPassword) GetEmoji() string { return "💎" }
 
-func (u *UsernameAndPassword) ToJson() (json.RawMessage, error) { return json.Marshal(u) }
+func (u *UsernameAndPassword) ToJson() (json.RawMessage, error) { return json.Marshal(u) } //nolint:gosec
 
 func ParseUsernameAndPassword(data json.RawMessage) (*UsernameAndPassword, error) {
 	var up UsernameAndPassword

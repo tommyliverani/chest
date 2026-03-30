@@ -7,8 +7,6 @@ import (
 	"slices"
 )
 
-//ok
-
 func getSessions() SessionMap {
 	sessionData, err := common.GetJsonSessions()
 	common.CheckWithMsg("Failed to read sessions", err)

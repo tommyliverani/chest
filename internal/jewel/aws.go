@@ -22,7 +22,7 @@ type Aws struct {
 
 func (a *Aws) GetEmoji() string { return "☁️ " }
 
-func (a *Aws) ToJson() (json.RawMessage, error) { return json.Marshal(a) }
+func (a *Aws) ToJson() (json.RawMessage, error) { return json.Marshal(a) } //nolint:gosec
 
 func ParseAws(data json.RawMessage) (*Aws, error) {
 	var aws Aws
@@ -101,13 +101,13 @@ func (a *Aws) Copy() {
 // and runs `aws configure` to confirm the profile is active.
 func (a *Aws) Use() {
 	credPath := filepath.Join(os.Getenv("HOME"), ".aws", "credentials")
-	if err := os.MkdirAll(filepath.Dir(credPath), 0700); err != nil {
+	if err := os.MkdirAll(filepath.Dir(credPath), 0700); err != nil { //nolint:gosec
 		common.Check(err)
 		return
 	}
 	content := fmt.Sprintf("[default]\naws_access_key_id = %s\naws_secret_access_key = %s\n",
 		a.AccessKeyId, a.SecretAccessKey)
-	if err := os.WriteFile(credPath, []byte(content), 0600); err != nil {
+	if err := os.WriteFile(credPath, []byte(content), 0600); err != nil { //nolint:gosec
 		common.Check(err)
 		return
 	}

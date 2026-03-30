@@ -35,8 +35,9 @@ func deleteChestJsonAndSession(chestToDelete factory.Chest) {
 		fmt.Println("Delete cancelled")
 		return
 	}
-	chestToDelete.Delete()
-	err := common.DeleteChestJsonById(chestToDelete.GetId())
+	err := chestToDelete.Delete()
+	common.Check(err)
+	err = common.DeleteChestJsonById(chestToDelete.GetId())
 	common.Check(err)
 	factory.DeleteSession(chestToDelete.GetId())
 	fmt.Printf("%s deleted\n", chestToDelete.GetName())
