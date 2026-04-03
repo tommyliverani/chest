@@ -17,11 +17,16 @@ A minimalist CLI secret manager to store credentials, keys, and configurations â
 sudo apt install xclip
 ```
 
-### Download binary (Linux amd64) and intstall
+### Download binary and install
 
+**Linux (amd64)**
 ```bash
 wget -qO chest https://github.com/tommyliverani/chest/releases/latest/download/chest-linux-amd64 && chmod +x chest && sudo mv chest /usr/local/bin/chest
 ```
+
+**Windows (amd64)**
+
+Download [`chest-windows-amd64.exe`](https://github.com/tommyliverani/chest/releases/latest/download/chest-windows-amd64.exe) from the latest release, rename it to `chest.exe` and move it to a folder included in your `PATH` (e.g. `C:\Windows\System32` or any custom directory).
 
 ### Build from source
 

@@ -4,9 +4,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 )
 
-var defaultSessionDir = fmt.Sprintf("/run/user/%d", os.Getuid())
+var defaultSessionDir = func() string {
+	if runtime.GOOS == "windows" {
+		return os.TempDir()
+	}
+	return fmt.Sprintf("/run/user/%d", os.Getuid())
+}()
 
 func ensureDir(dir string) error {
 	return os.MkdirAll(dir, 0750)

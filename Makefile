@@ -4,7 +4,7 @@ MAIN_BRANCH=main
 # Gets the version from Git or defaults to v0.0.0
 VERSION?=$(shell git describe --tags --always --dirty 2>/dev/null || echo "v0.0.0")
 
-.PHONY: all ci quality test build run clean create-feature close-feature release deliver help
+.PHONY: all ci quality test build build-all run clean create-feature close-feature release deliver help
 
 all: quality build
 
@@ -32,6 +32,12 @@ quality:
 build:
 	@echo "[BUILD] --- Compiling binary (Version: $(VERSION)) ---"
 	go build -ldflags "-X main.Version=$(VERSION)" -o $(BINARY_NAME) ./cmd/chest
+
+build-all:
+	@echo "[BUILD] --- Cross-compiling binaries (Version: $(VERSION)) ---"
+	GOOS=linux  GOARCH=amd64 go build -ldflags "-X main.Version=$(VERSION)" -o dist/$(BINARY_NAME)-linux-amd64   ./cmd/chest
+	GOOS=windows GOARCH=amd64 go build -ldflags "-X main.Version=$(VERSION)" -o dist/$(BINARY_NAME)-windows-amd64.exe ./cmd/chest
+	@echo "✅ Binaries written to dist/"
 
 run: build
 	@echo "[RUN] --- Starting $(BINARY_NAME) ---"
@@ -80,10 +86,12 @@ deliver:
 	@command -v gh >/dev/null 2>&1 || { echo "Installing GitHub CLI..."; sudo apt-get install -y gh; }
 	@echo "[DELIVER] --- Building binary for version $(DELIVER_VERSION) ---"
 	@mkdir -p dist
-	GOOS=linux GOARCH=amd64 go build -ldflags "-X main.Version=$(DELIVER_VERSION)" -o dist/$(BINARY_NAME)-linux-amd64 ./cmd/chest
+	GOOS=linux   GOARCH=amd64 go build -ldflags "-X main.Version=$(DELIVER_VERSION)" -o dist/$(BINARY_NAME)-linux-amd64         ./cmd/chest
+	GOOS=windows GOARCH=amd64 go build -ldflags "-X main.Version=$(DELIVER_VERSION)" -o dist/$(BINARY_NAME)-windows-amd64.exe ./cmd/chest
 	@echo "[DELIVER] --- Creating GitHub release $(DELIVER_VERSION) ---"
 	gh release create $(DELIVER_VERSION) \
 		dist/$(BINARY_NAME)-linux-amd64 \
+		dist/$(BINARY_NAME)-windows-amd64.exe \
 		--title "$(DELIVER_VERSION)" \
 		--generate-notes
 	@echo "🚀 Release $(DELIVER_VERSION) published on GitHub!"

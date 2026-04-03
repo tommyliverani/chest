@@ -110,7 +110,12 @@ func (s *SshKey) Use() {
 		host += ":22"
 	}
 
-	knownHostsFile := filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts")
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "cannot determine home directory: %v\n", err)
+		return
+	}
+	knownHostsFile := filepath.Join(homeDir, ".ssh", "known_hosts")
 	hostKeyCallback, err := knownhosts.New(knownHostsFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "cannot load known_hosts (%s): %v\nRun 'ssh %s' first to add the host.\n", knownHostsFile, err, s.Url)

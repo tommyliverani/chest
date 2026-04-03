@@ -100,7 +100,12 @@ func (a *Aws) Copy() {
 // Use writes the credentials to ~/.aws/credentials under [default] profile
 // and runs `aws configure` to confirm the profile is active.
 func (a *Aws) Use() {
-	credPath := filepath.Join(os.Getenv("HOME"), ".aws", "credentials")
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		common.Check(err)
+		return
+	}
+	credPath := filepath.Join(homeDir, ".aws", "credentials")
 	if err := os.MkdirAll(filepath.Dir(credPath), 0700); err != nil { //nolint:gosec
 		common.Check(err)
 		return

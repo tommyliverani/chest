@@ -90,7 +90,12 @@ func (k *Kubeconfig) Copy() {}
 
 // Use merges the kubeconfig into ~/.kube/config and sets current-context.
 func (k *Kubeconfig) Use() {
-	kubeDir := filepath.Join(os.Getenv("HOME"), ".kube")
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		common.Check(err)
+		return
+	}
+	kubeDir := filepath.Join(homeDir, ".kube")
 	if err := os.MkdirAll(kubeDir, 0700); err != nil { //nolint:gosec
 		common.Check(err)
 		return
