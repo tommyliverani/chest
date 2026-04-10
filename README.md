@@ -198,4 +198,58 @@ chest ssh copy prod-server
 
 # Close when done
 chest close
+
+---
+
+## 🔄 Project lifecycle
+
+This project follows a **trunk-based development** workflow. All commands below are driven by the `Makefile`.
+
+### Daily development
+
+```bash
+make quality   # lint (golangci-lint) + vulnerability scan (govulncheck)
+make build     # compile the binary locally
+make all       # quality + build (default CI gate)
+```
+
+### Feature workflow
+
+```bash
+# Start a new feature branch from main
+make create-feature NAME=my-feature
+# → creates and checks out feat/my-feature
+
+# ... develop, commit, test locally ...
+
+# Merge the feature back into main and delete the branch
+make close-feature
+```
+
+### Release workflow
+
+Releases must be cut from the `main` branch with a clean working tree.
+
+```bash
+# 1. Tag and push the release
+make release VERSION=v1.2.0
+
+# 2. Build cross-platform binaries and publish the GitHub release
+make deliver
+```
+
+`make deliver` produces two binaries in `dist/`:
+
+| Binary | Platform |
+|--------|----------|
+| `chest-linux-amd64` | Linux x86-64 |
+| `chest-windows-amd64.exe` | Windows x86-64 |
+
+### CI pipeline
+
+The `ci` target runs the full quality + build gate and is meant to be used in automated pipelines:
+
+```bash
+make ci
+```
 ```
