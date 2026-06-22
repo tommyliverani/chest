@@ -50,7 +50,7 @@ sudo mv chest /usr/local/bin/chest
 | **Chest** | A container of jewels |
 
 
-Chests are stored as encrypted JSON files. When you **open** a chest, its decrypted contents are temporarily saved in `/run/user/<uid>/` and are available to all jewel commands until you **close** it.
+Chests are stored as encrypted JSON files. When you **open** a chest, its decrypted contents are temporarily saved in `/run/user/<uid>/` and are available to all jewel commands until you **close** it or **terminate** the session.
 
 ---
 
